@@ -36,7 +36,6 @@ public class NoFallA extends PacketCheck {
 
             if (player.bukkitPlayer.getName().startsWith(".")) return;
 
-
             // The player hasn't spawned yet
             if (player.getSetbackTeleportUtil().insideUnloadedChunk()) return;
             // The player has already been flagged, and
