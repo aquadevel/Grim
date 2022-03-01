@@ -41,6 +41,8 @@ public class KnockbackHandler extends PacketCheck {
             GrimPlayer player = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getUser());
             if (player == null) return;
 
+            if (player.bukkitPlayer.getName().startsWith(".")) return;
+
             // Detect whether this knockback packet affects the player or if it is useless
             // Mojang sends extra useless knockback packets for no apparent reason
             if (player.compensatedEntities.serverPlayerVehicle != null && entityId != player.compensatedEntities.serverPlayerVehicle) {
