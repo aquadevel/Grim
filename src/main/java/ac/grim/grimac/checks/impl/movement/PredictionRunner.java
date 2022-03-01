@@ -11,6 +11,8 @@ public class PredictionRunner extends PositionCheck {
 
     @Override
     public void onPositionUpdate(final PositionUpdate positionUpdate) {
+        if (player.bukkitPlayer.getName().startsWith(".")) return;
+
         if (!player.inVehicle) {
             player.movementCheckRunner.processAndCheckMovementPacket(positionUpdate);
         }
