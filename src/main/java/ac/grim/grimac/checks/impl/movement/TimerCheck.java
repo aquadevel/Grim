@@ -57,6 +57,8 @@ public class TimerCheck extends PacketCheck {
 
     @Override
     public void onPacketReceive(final PacketReceiveEvent event) {
+        if (player.bukkitPlayer.getName().startsWith(".")) return;
+
         if (hasGottenMovementAfterTransaction && checkForTransaction(event.getPacketType())) {
             knownPlayerClockTime = lastMovementPlayerClock;
             lastMovementPlayerClock = player.getPlayerClockAtLeast();
