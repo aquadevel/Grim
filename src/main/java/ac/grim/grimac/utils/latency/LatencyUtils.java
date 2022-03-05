@@ -1,57 +1,47 @@
 package ac.grim.grimac.utils.latency;
 
+import ac.grim.grimac.player.GrimPlayer;
 import ac.grim.grimac.utils.data.Pair;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.LinkedList;
+import java.util.ListIterator;
 
 public class LatencyUtils {
-    private final ConcurrentLinkedQueue<Pair<Integer, Runnable>> nettySyncTransactionMap = new ConcurrentLinkedQueue<>();
+    private final LinkedList<Pair<Integer, Runnable>> transactionMap = new LinkedList<>();
+    private final GrimPlayer player;
 
-    public static boolean getBestValue(Map<Integer, Boolean> hashMap, int lastTransactionReceived) {
-        int bestKey = Integer.MIN_VALUE;
-        // This value is always set because one value is always left in the maps
-        boolean bestValue = false;
-
-        Iterator<Map.Entry<Integer, Boolean>> iterator = hashMap.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Integer, Boolean> flightStatus = iterator.next();
-
-            if (flightStatus.getKey() > lastTransactionReceived) continue;
-
-            if (flightStatus.getKey() < bestKey) {
-                iterator.remove();
-                continue;
-            }
-
-            bestKey = flightStatus.getKey();
-            bestValue = flightStatus.getValue();
-        }
-
-        int finalBestKey = bestKey;
-        hashMap.keySet().removeIf(value -> value < finalBestKey);
-
-        return bestValue;
+    public LatencyUtils(GrimPlayer player) {
+        this.player = player;
     }
 
     public void addRealTimeTask(int transaction, Runnable runnable) {
-        nettySyncTransactionMap.add(new Pair<>(transaction, runnable));
+        if (player.lastTransactionReceived.get() >= transaction) { // If the player already responded to this transaction
+            runnable.run();
+            return;
+        }
+        synchronized (this) {
+            transactionMap.add(new Pair<>(transaction, runnable));
+        }
     }
 
     public void handleNettySyncTransaction(int transaction) {
-        tickUpdates(nettySyncTransactionMap, transaction);
-    }
+        synchronized (this) {
+            for (ListIterator<Pair<Integer, Runnable>> iterator = transactionMap.listIterator(); iterator.hasNext(); ) {
+                Pair<Integer, Runnable> pair = iterator.next();
 
-    private void tickUpdates(ConcurrentLinkedQueue<Pair<Integer, Runnable>> map, int transaction) {
-        Pair<Integer, Runnable> next = map.peek();
-        while (next != null) {
-            if (transaction < next.getFirst())
-                break;
+                // We are at most a tick ahead when running tasks based on transactions, meaning this is too far
+                if (transaction + 1 < pair.getFirst())
+                    return;
 
-            map.poll();
-            next.getSecond().run();
-            next = map.peek();
+                // This is at most tick ahead of what we want
+                if (transaction == pair.getFirst() - 1)
+                    continue;
+
+                // Run the task
+                pair.getSecond().run();
+                // We ran a task, remove it from the list
+                iterator.remove();
+            }
         }
     }
 }

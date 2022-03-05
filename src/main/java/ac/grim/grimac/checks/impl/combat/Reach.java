@@ -22,9 +22,8 @@ import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
 import ac.grim.grimac.utils.data.packetentity.PacketEntity;
 import ac.grim.grimac.utils.math.VectorUtils;
 import ac.grim.grimac.utils.nmsutil.ReachUtils;
-import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
-import com.github.retrooper.packetevents.manager.server.ServerVersion;
+import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
@@ -45,6 +44,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class Reach extends PacketCheck {
     // Concurrent to support weird entity trackers
     private final ConcurrentLinkedQueue<Integer> playerAttackQueue = new ConcurrentLinkedQueue<>();
+    private static final List<EntityType> exempt = Arrays.asList(
+            EntityTypes.BOAT,
+            EntityTypes.SHULKER,
+            EntityTypes.ITEM_FRAME,
+            EntityTypes.GLOW_ITEM_FRAME,
+            EntityTypes.PAINTING);
 
     private boolean cancelImpossibleHits;
     private double threshold;
@@ -57,6 +62,12 @@ public class Reach extends PacketCheck {
     public void onPacketReceive(final PacketReceiveEvent event) {
         if (!player.disableGrim && event.getPacketType() == PacketType.Play.Client.INTERACT_ENTITY) {
             WrapperPlayClientInteractEntity action = new WrapperPlayClientInteractEntity(event);
+
+            // Don't let the player teleport to bypass reach
+            if (player.getSetbackTeleportUtil().shouldBlockMovement()) {
+                event.setCancelled(true);
+                return;
+            }
 
             PacketEntity entity = player.compensatedEntities.entityMap.get(action.getEntityId());
             // Stop people from freezing transactions before an entity spawns to bypass reach
@@ -101,7 +112,7 @@ public class Reach extends PacketCheck {
         PacketEntity reachEntity = player.compensatedEntities.entityMap.get(entityID);
         boolean zeroThree = player.packetStateData.didLastMovementIncludePosition || player.getClientVersion().isNewerThanOrEquals(ClientVersion.V_1_9);
 
-        if (reachEntity == null || reachEntity.type == EntityTypes.BOAT || reachEntity.type == EntityTypes.SHULKER)
+        if (reachEntity == null || exempt.contains(reachEntity.type))
             return false; // exempt
 
         double lowest = 6;
@@ -125,15 +136,6 @@ public class Reach extends PacketCheck {
             if (reachEntity == null) return;
 
             SimpleCollisionBox targetBox = reachEntity.getPossibleCollisionBoxes();
-
-            // 1.9 -> 1.8 precision loss in packets
-            // (ViaVersion is doing some stuff that makes this code difficult)
-            //
-            // This will likely be fixed with PacketEvents 2.0, where our listener is before ViaVersion
-            // Don't attempt to fix it with this version of PacketEvents, it's not worth our time when 2.0 will fix it.
-            if (PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_9) && player.getClientVersion().isOlderThan(ClientVersion.V_1_9)) {
-                targetBox.expand(0.03125);
-            }
 
             // 1.7 and 1.8 players get a bit of extra hitbox (this is why you should use 1.8 on cross version servers)
             // Yes, this is vanilla and not uncertainty.  All reach checks have this or they are wrong.
@@ -188,7 +190,7 @@ public class Reach extends PacketCheck {
                 }
             }
 
-            if (reachEntity.type != EntityTypes.BOAT && reachEntity.type != EntityTypes.SHULKER) { // boats are too glitchy to consider
+            if (!exempt.contains(reachEntity.type)) {
                 if (minDistance == Double.MAX_VALUE) {
                     increaseViolationNoSetback();
                     alert("Missed hitbox", "Reach", formatViolations());
