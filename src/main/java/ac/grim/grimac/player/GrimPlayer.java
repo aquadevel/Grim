@@ -201,8 +201,8 @@ public class GrimPlayer {
         this.playerUUID = user.getProfile().getUUID();
         this.user = user;
 
-        // Geyser players don't have Java movement
-        if (GeyserUtil.isGeyserPlayer(playerUUID)) return;
+        // Geyser players don't have Java movement. As we run geyser on proxy personally, we can skip this
+        //if (GeyserUtil.isGeyserPlayer(playerUUID)) return;
 
         pollData();
 

@@ -33,8 +33,6 @@ public class ExplosionHandler extends PacketCheck {
     @Override
     public void onPacketSend(final PacketSendEvent event) {
         if (event.getPacketType() == PacketType.Play.Server.EXPLOSION) {
-            if (player.bukkitPlayer.getName().startsWith(".")) return;
-
             WrapperPlayServerExplosion explosion = new WrapperPlayServerExplosion(event);
 
             Vector3f velocity = explosion.getPlayerMotion();

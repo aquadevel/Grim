@@ -17,8 +17,6 @@ public class SetbackBlocker extends PacketCheck {
         if (player.packetStateData.lastPacketWasTeleport) return;
         if (player.disableGrim) return;
 
-        if (player.bukkitPlayer.getName().startsWith(".")) return;
-
         if (WrapperPlayClientPlayerFlying.isFlying(event.getPacketType())) {
             // The player must obey setbacks
             if (player.getSetbackTeleportUtil().shouldBlockMovement()) {

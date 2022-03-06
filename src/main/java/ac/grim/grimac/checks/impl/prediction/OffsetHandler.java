@@ -31,8 +31,6 @@ public class OffsetHandler extends PostPredictionCheck {
 
         boolean vehicle = player.inVehicle;
 
-        if (player.bukkitPlayer.getName().startsWith(".")) return;
-
         CompletePredictionEvent completePredictionEvent = new CompletePredictionEvent(getPlayer(), predictionComplete.getOffset());
         Bukkit.getPluginManager().callEvent(completePredictionEvent);
 

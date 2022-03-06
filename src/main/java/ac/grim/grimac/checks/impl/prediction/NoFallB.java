@@ -22,8 +22,6 @@ public class NoFallB extends PostPredictionCheck {
         if (PacketEvents.getAPI().getServerManager().getVersion().isNewerThanOrEquals(ServerVersion.V_1_8) && player.gamemode == GameMode.SPECTATOR)
             return;
 
-        if (player.bukkitPlayer.getName().startsWith(".")) return;
-
         // And don't check this long list of ground exemptions
         if (player.exemptOnGround()) return;
         // Don't check if the player was on a ghost block
