@@ -8,6 +8,7 @@ import ac.grim.grimac.utils.blockplace.ConsumesBlockPlace;
 import ac.grim.grimac.utils.collisions.HitboxData;
 import ac.grim.grimac.utils.collisions.datatypes.CollisionBox;
 import ac.grim.grimac.utils.collisions.datatypes.SimpleCollisionBox;
+import ac.grim.grimac.utils.data.HeadRotation;
 import ac.grim.grimac.utils.data.HitData;
 import ac.grim.grimac.utils.data.Pair;
 import ac.grim.grimac.utils.data.TeleportAcceptData;
@@ -305,14 +306,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
 
     @Override
     public void onPacketReceive(PacketReceiveEvent event) {
-        if (event.getPacketId() == -1) {
-            System.out.println("Packet ID -1");
-            new Exception().printStackTrace();
-        }
-        if (event.getPacketType() == null) {
-            System.out.println("Packet type is null");
-            new Exception().printStackTrace();
-        }
         if (event.getConnectionState() != ConnectionState.PLAY) return;
         GrimPlayer player = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getUser());
         if (player == null) return;
@@ -782,7 +775,7 @@ public class CheckManagerListener extends PacketListenerAbstract {
             float deltaXRot = player.xRot - player.lastXRot;
             float deltaYRot = player.yRot - player.lastYRot;
 
-            final RotationUpdate update = new RotationUpdate(player.lastXRot, player.lastYRot, player.xRot, player.yRot, deltaXRot, deltaYRot);
+            final RotationUpdate update = new RotationUpdate(new HeadRotation(player.lastXRot, player.lastYRot), new HeadRotation(player.xRot, player.yRot), deltaXRot, deltaYRot);
             player.checkManager.onRotationUpdate(update);
         }
 
@@ -873,15 +866,6 @@ public class CheckManagerListener extends PacketListenerAbstract {
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
-        if (event.getPacketId() == -1) {
-            System.out.println("Packet ID -1");
-            new Exception().printStackTrace();
-        }
-        if (event.getPacketType() == null) {
-            System.out.println("Packet type is null");
-            new Exception().printStackTrace();
-        }
-
         if (event.getConnectionState() != ConnectionState.PLAY) return;
         GrimPlayer player = GrimAPI.INSTANCE.getPlayerDataManager().getPlayer(event.getUser());
         if (player == null) return;
