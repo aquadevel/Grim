@@ -32,7 +32,7 @@ public class NoFallB extends PostPredictionCheck {
         boolean invalid = player.clientClaimsLastOnGround != player.onGround;
 
         if (invalid) {
-            increaseViolations();
+            flagWithSetback();
             alert("claimed " + player.clientClaimsLastOnGround, "GroundSpoof (P)", formatViolations());
             player.checkManager.getNoFall().flipPlayerGroundStatus = true;
         }
